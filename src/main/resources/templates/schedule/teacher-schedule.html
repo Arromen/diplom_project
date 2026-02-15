@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Расписание: <span th:text="${teacher.fullName}"></span></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-4">
+<h1>Расписание преподавателя: <span th:text="${teacher.fullName}"></span></h1>
+<a href="/schedule/teachers" class="btn btn-secondary mb-3">← Назад к списку</a>
+
+<div th:if="${#lists.isEmpty(lessons)}" class="alert alert-info">
+    У преподавателя пока нет занятий.
+</div>
+
+<table th:unless="${#lists.isEmpty(lessons)}" class="table table-bordered">
+    <thead>
+    <tr>
+        <th>Дата и время</th>
+        <th>Аудитория</th>
+        <th>Группа</th>
+        <th>Предмет</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="l : ${lessons}">
+        <td>
+            <span th:text="${#temporals.format(l.startTime, 'dd.MM.yyyy HH:mm')}"></span> –
+            <span th:text="${#temporals.format(l.endTime, 'HH:mm')}"></span>
+        </td>
+        <td th:text="${l.classroom.name}"></td>
+        <td th:text="${l.group?.name ?: '—'}"></td>
+        <td th:text="${l.subject?.name ?: '—'}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
