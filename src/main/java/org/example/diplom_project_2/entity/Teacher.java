@@ -5,7 +5,8 @@ import lombok.*;
 
 @Entity
 @Table(name = "teachers")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Teacher {
@@ -15,5 +16,5 @@ public class Teacher {
     private Long id;
 
     @Column(nullable = false)
-    private String fullName; // ФИО
+    private String fullName;
 }

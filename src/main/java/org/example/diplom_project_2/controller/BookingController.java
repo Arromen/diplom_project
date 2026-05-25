@@ -9,7 +9,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Controller
 @RequestMapping("/bookings")
@@ -67,8 +66,12 @@ public class BookingController {
             return "redirect:/bookings";
         } catch (IllegalArgumentException e) {
             model.addAttribute("errorMessage", e.getMessage());
+            // ИСПРАВЛЕНО: Возвращаем в модель абсолютно все списки, чтобы Thymeleaf не упал при рендере
             model.addAttribute("classrooms", classroomRepository.findAll());
-            return "bookings/form"; // вернуть форму с ошибкой
+            model.addAttribute("groups", groupRepository.findAll());
+            model.addAttribute("teachers", teacherRepository.findAll());
+            model.addAttribute("subjects", subjectRepository.findAll());
+            return "bookings/form";
         }
     }
 }

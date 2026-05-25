@@ -5,7 +5,8 @@ import lombok.*;
 
 @Entity
 @Table(name = "groups")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Group {
@@ -15,5 +16,5 @@ public class Group {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String name; // например: "IT-СИП-22-23-Java"
+    private String name;
 }

@@ -2,53 +2,98 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Расписание на неделю: <span th:text="${group.name}"></span></title>
+    <title>Графическое расписание: [[${group.name}]]</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
     <style>
-        .day-cell { min-height: 100px; background-color: #f8f9fa; }
-        .lesson-item { background-color: #e9ecef; padding: 6px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em; }
+        #calendar {
+            max-width: 1100px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .fc-event { cursor: pointer; transition: transform 0.2s; }
+        .fc-event:hover { transform: scale(1.02); }
     </style>
 </head>
-<body class="container mt-4">
-<h1>Расписание группы: <span th:text="${group.name}"></span></h1>
-<p>Неделя с <span th:text="${#temporals.format(monday, 'dd.MM.yyyy')}"></span></p>
+<body class="bg-light container-fluid py-4">
 
-<div class="table-responsive">
-    <table class="table table-bordered">
-        <thead class="table-light">
-        <tr>
-            <th>Понедельник</th>
-            <th>Вторник</th>
-            <th>Среда</th>
-            <th>Четверг</th>
-            <th>Пятница</th>
-            <th>Суббота</th>
-            <th>Воскресенье</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <!-- Для каждого дня -->
-            <td th:each="day : ${weekDates}" class="align-top day-cell">
-                <div class="fw-bold mb-2" th:text="${#temporals.dayOfWeekName(day)} + ', ' + ${#temporals.format(day, 'dd.MM')}"></div>
-                <!-- Занятия в этот день -->
-                <div th:each="lesson : ${lessons}"
-                     th:if="${lesson.startTime.toLocalDate().equals(day)}"
-                     class="lesson-item">
-                    <div><strong th:text="${lesson.subject?.name ?: lesson.purpose}"></strong></div>
-                    <div th:text="${#temporals.format(lesson.startTime, 'HH:mm')} + '–' + ${#temporals.format(lesson.endTime, 'HH:mm')}"></div>
-                    <div th:text="${lesson.classroom.name}"></div>
-                    <div th:text="${lesson.teacher?.fullName ?: ''}" class="text-muted"></div>
-                </div>
-                <div th:if="${#lists.isEmpty(#lists.select(lessons, ${it.startTime.toLocalDate().equals(day)}))}" class="text-muted">
-                    Нет занятий
-                </div>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+<div class="d-flex justify-content-between align-items-center max-width mx-auto style='max-width: 1100px;'">
+    <h1>Расписание группы: <span class="text-primary" th:text="${group.name}"></span></h1>
+    <a th:href="@{/schedule/group/{id}(id=${group.id})}" class="btn btn-outline-secondary">← К обычному списку</a>
 </div>
 
-<a href="/schedule/group/{id}" th:href="@{/schedule/group/{id}(id=${group.id})}" class="btn btn-secondary">← К полному расписанию</a>
+<div id="calendar"></div>
+
+<div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-content modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Информация о занятии</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Занятие:</strong> <span id="modalEventName"></span></p>
+                <p><strong>Преподаватель:</strong> <span id="modalTeacher"></span></p>
+                <p><strong>Время:</strong> <span id="modalTime"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        const groupId = [[${group.id}]]; // Передаем ID группы из Thymeleaf в JS
+
+        // Инициализация модального окна Bootstrap
+        const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek', // По умолчанию показываем неделю с сеткой часов
+            locale: 'ru', // Полная русификация интерфейса кнопок и дней недели
+            firstDay: 1, // Понедельник — первый день недели
+            slotMinTime: '08:00:00', // Начало учебного дня в сетке
+            slotMaxTime: '21:00:00', // Конец учебного дня в сетке
+            allDaySlot: false,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay' // Переключатели видов (Месяц, Неделя, День)
+            },
+            buttonText: {
+                today: 'Сегодня',
+                month: 'Месяц',
+                week: 'Неделя',
+                day: 'День'
+            },
+            // Подключаем наш новый REST API эндпоинт как источник данных
+            events: '/api/bookings/group/' + groupId,
+
+            // Обработка клика по карточке занятия
+            eventClick: function(info) {
+                document.getElementById('modalTitle').innerText = "Детали бронирования";
+                document.getElementById('modalEventName').innerText = info.event.title;
+                document.getElementById('modalTeacher').innerText = info.event.extendedProps.description;
+
+                const start = new Date(info.event.start).toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+                const end = new Date(info.event.end).toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+                document.getElementById('modalTime').innerText = start + " - " + end;
+
+                eventModal.show();
+            }
+        });
+
+        calendar.render();
+    });
+</script>
 </body>
 </html>

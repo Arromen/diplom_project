@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -42,7 +43,6 @@ public class ScheduleController {
         Group group = groupRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Группа не найдена"));
 
-        // Получаем все занятия группы (только lesson)
         List<Booking> lessons = bookingRepository.findByGroupAndBookingType(group, "lesson");
 
         model.addAttribute("group", group);
@@ -84,16 +84,14 @@ public class ScheduleController {
         LocalDate monday = WeekUtils.getCurrentMonday();
         List<LocalDate> weekDates = WeekUtils.getWeekDates(monday);
 
-        // Получаем все занятия группы за эту неделю
-        List<Booking> lessons = bookingRepository.findByGroupAndBookingType(group, "lesson");
+        // ИСПРАВЛЕНО: Вычисляем временные границы недели для SQL
+        LocalDateTime startOfWeek = monday.atStartOfDay();
+        LocalDateTime endOfWeek = monday.plusDays(6).atTime(23, 59, 59);
 
-        // Фильтруем только те, что в текущей неделе
-        List<Booking> thisWeekLessons = lessons.stream()
-                .filter(booking -> {
-                    LocalDate lessonDate = booking.getStartTime().toLocalDate();
-                    return weekDates.contains(lessonDate);
-                })
-                .toList();
+        // Тянем из базы только целевые строки за текущую неделю
+        List<Booking> thisWeekLessons = bookingRepository.findByGroupAndBookingTypeAndStartTimeBetween(
+                group, "lesson", startOfWeek, endOfWeek
+        );
 
         model.addAttribute("group", group);
         model.addAttribute("weekDates", weekDates);

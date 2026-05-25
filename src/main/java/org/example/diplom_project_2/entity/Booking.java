@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "bookings")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Booking {
@@ -23,7 +24,7 @@ public class Booking {
     private Classroom classroom;
 
     @NotBlank
-    private String bookedBy; // ФИО или логин
+    private String bookedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
@@ -38,7 +39,7 @@ public class Booking {
     private Subject subject;
 
     @NotBlank
-    private String purpose; // "Лекция по БД", "Совещание кафедры"
+    private String purpose;
 
     @NotNull
     private LocalDateTime startTime;
@@ -47,5 +48,5 @@ public class Booking {
     private LocalDateTime endTime;
 
     @NotBlank
-    private String bookingType; // "lesson", "meeting", "event", "consultation"
+    private String bookingType;
 }

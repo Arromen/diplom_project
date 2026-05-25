@@ -5,7 +5,8 @@ import lombok.*;
 
 @Entity
 @Table(name = "subjects")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Subject {
@@ -15,5 +16,5 @@ public class Subject {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String name; // Например: "Базы данных", "Java-разработка"
+    private String name;
 }

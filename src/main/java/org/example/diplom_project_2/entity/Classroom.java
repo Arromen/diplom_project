@@ -3,12 +3,10 @@ package org.example.diplom_project_2.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "classrooms")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Classroom {
@@ -17,14 +15,13 @@ public class Classroom {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String name; // например, "304", "Лекционная 1"
+    // Сделали уникальным, как в нашей новой миграции БД
+    @Column(nullable = false, unique = true)
+    private String name;
 
     @Column(nullable = false)
     private Integer capacity;
 
     @Column(nullable = false)
-    private String type; // "lecture", "lab", "computer", "seminar"
-
-    // Можно позже добавить связи с features (проектор и т.д.)
+    private String type;
 }
