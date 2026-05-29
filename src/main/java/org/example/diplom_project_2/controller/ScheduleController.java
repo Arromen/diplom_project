@@ -100,4 +100,9 @@ public class ScheduleController {
 
         return "schedule/group-week-schedule";
     }
+
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login"; // Возвращает имя нашего файла login.html
+    }
 }

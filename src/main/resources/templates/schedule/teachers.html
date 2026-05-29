@@ -1,26 +1,102 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>Преподаватели</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Преподаватели — Панель управления</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f6f9; color: #333; }
+        .sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 100; width: 260px; background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); box-shadow: 4px 0 10px rgba(0,0,0,0.05); }
+        .sidebar .nav-link { font-weight: 500; color: #94a3b8; padding: 12px 20px; margin: 4px 15px; border-radius: 8px; display: flex; align-items: center; gap: 12px; text-decoration: none; transition: all 0.2s; }
+        .sidebar .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.05); }
+        .sidebar .nav-link.active { color: #fff; background-color: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        .main-content { margin-left: 260px; padding: 40px; }
+        .card-custom { background: #fff; border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); }
+        .btn-action { border-radius: 6px; font-weight: 500; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; }
+    </style>
 </head>
-<body class="container mt-4">
-<h1>Преподаватели</h1>
+<body>
 
-<table class="table table-striped">
-    <thead><tr><th>ФИО</th><th>Действие</th></tr></thead>
-    <tbody>
-    <tr th:each="t : ${teachers}">
-        <td th:text="${t.fullName}"></td>
-        <td>
-            <a th:href="@{/schedule/teacher/{id}(id=${t.id})}"
-               class="btn btn-sm btn-info">Расписание</a>
-        </td>
-    </tr>
-    </tbody>
-</table>
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="px-4 py-4 d-flex align-items-center gap-2">
+        <i class="bi bi-calendar2-week text-primary fs-3"></i>
+        <span class="text-white fw-bold fs-5">ИС «Университет»</span>
+    </div>
+    <hr class="text-secondary mx-3">
+    <ul class="nav flex-column mt-3">
+        <li class="nav-item"><a class="nav-link" href="/schedule"><i class="bi bi-people"></i> Группы</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/schedule/teachers"><i class="bi bi-person-badge"></i> Преподаватели</a></li>
+        <li class="nav-item"><a class="nav-link" href="/search"><i class="bi bi-search"></i> Поиск свободных комнат</a></li>
+        <li class="nav-item" sec:authorize="hasAnyRole('TEACHER', 'ADMIN')"><a class="nav-link" href="/bookings"><i class="bi bi-journal-bookmark"></i> Все бронирования</a></li>
+    </ul>
+</div>
 
-<a href="/schedule" class="btn btn-secondary">← Назад</a>
+<!-- MAIN CONTENT -->
+<div class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-5 bg-white p-3 rounded-3 shadow-sm">
+        <div>
+            <h4 class="fw-bold mb-0">Кадровый состав профессорско-преподавательского бюро</h4>
+            <small class="text-muted">Управление нагрузкой и персональными графиками занятий</small>
+        </div>
+        <div sec:authorize="isAuthenticated()" class="text-end">
+            <span class="fw-semibold text-dark"><i class="bi bi-person-circle text-primary"></i> <span sec:authentication="name"></span></span>
+        </div>
+    </div>
+
+    <!-- Форма добавления (Только ADMIN) -->
+    <div class="card card-custom p-4 mb-4" sec:authorize="hasRole('ADMIN')">
+        <h5 class="fw-bold mb-3"><i class="bi bi-person-plus text-success me-2"></i>Зарегистрировать сотрудника</h5>
+        <form method="post" action="/teachers">
+            <div class="input-group">
+                <input type="text" name="fullName" class="form-control form-control-lg bg-light border-0"
+                       placeholder="Введите полное ФИО преподавателя (например: Павловский В. Е.)" required style="font-size: 0.95rem;">
+                <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-lg"></i> Сохранить</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Список сотрудников -->
+    <div class="card card-custom p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr class="text-secondary small text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                    <th style="width: 75%;">ФИО Преподавателя / Профессора</th>
+                    <th style="width: 25%; text-align: right;">Действие</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="t : ${teachers}">
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-light text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-person-vcard fs-5"></i>
+                            </div>
+                            <span class="fw-semibold text-dark" th:text="${t.fullName}"></span>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <a th:href="@{/schedule/teacher/{id}(id=${t.id})}" class="btn btn-primary btn-action">
+                            <i class="bi bi-calendar-event"></i> Личный график
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(teachers)}">
+                    <td colspan="2" class="text-center text-muted py-4">
+                        <i class="bi bi-people-fill fs-2 d-block mb-2 text-secondary"></i> Нет зарегистрированных преподавателей
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

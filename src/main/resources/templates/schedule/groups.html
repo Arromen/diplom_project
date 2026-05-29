@@ -3,46 +3,223 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>Группы</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="container mt-4">
+    <!DOCTYPE html>
+    <html xmlns:th="http://www.thymeleaf.org"
+          xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Панель управления — Расписание</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
-<div class="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded">
-    <h1>Учебные группы</h1>
-    <div>
-        <div sec:authorize="isAuthenticated()">
-            Вы вошли как: <strong sec:authentication="name"></strong>
-            <a href="/logout" class="btn btn-sm btn-outline-danger ms-2">Выйти</a>
+        <style>
+            body {
+                font-family: 'Inter', sans-serif;
+                background-color: #f4f6f9;
+                color: #333;
+            }
+            /* Стили бокового меню (Sidebar) как в продакшн-системах */
+            .sidebar {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 100;
+                width: 260px;
+                background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+                box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+                transition: all 0.3s;
+            }
+            .sidebar .nav-link {
+                font-weight: 500;
+                color: #94a3b8;
+                padding: 12px 20px;
+                margin: 4px 15px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                transition: all 0.2s;
+            }
+            .sidebar .nav-link:hover {
+                color: #fff;
+                background-color: rgba(255,255,255,0.05);
+            }
+            .sidebar .nav-link.active {
+                color: #fff;
+                background-color: #3b82f6;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            }
+            /* Главный контент */
+            .main-content {
+                margin-left: 260px;
+                padding: 40px;
+            }
+            /* Премиальные карточки */
+            .card-custom {
+                background: #fff;
+                border: none;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .card-custom:hover {
+                box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+            }
+            .table-custom th {
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.5px;
+                color: #64748b;
+                border-bottom: 2px solid #edf2f7;
+            }
+            .table-custom td {
+                vertical-align: middle;
+                font-size: 0.95rem;
+            }
+            .btn-action {
+                border-radius: 6px;
+                font-weight: 500;
+                font-size: 0.85rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+        </style>
+    </head>
+    <body>
+
+    <div class="sidebar">
+        <div class="px-4 py-4 d-flex align-items-center gap-2">
+            <i class="bi bi-calendar2-week text-primary fs-3"></i>
+            <span class="text-white fw-bold fs-5 tracking-wide">ИС «Университет»</span>
         </div>
-        <div sec:authorize="isAnonymous()">
-            <a href="/login" class="btn btn-sm btn-primary">Войти в систему</a>
+
+        <hr class="text-secondary mx-3">
+
+        <ul class="nav flex-column mt-3">
+            <li class="nav-item">
+                <a class="nav-link active" href="/schedule">
+                    <i class="bi bi-people"></i> Группы
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/schedule/teachers">
+                    <i class="bi bi-person-badge"></i> Преподаватели
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/search">
+                    <i class="bi bi-search"></i> Поиск свободных комнат
+                </a>
+            </li>
+            <li class="nav-item" sec:authorize="hasAnyRole('TEACHER', 'ADMIN')">
+                <a class="nav-link" href="/bookings">
+                    <i class="bi bi-journal-bookmark"></i> Все бронирования
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+
+        <div class="d-flex justify-content-between align-items-center mb-5 bg-white p-3 rounded-3 shadow-sm">
+            <div>
+                <h4 class="fw-bold mb-0">Управление учебными группами</h4>
+                <small class="text-muted">Просмотр сетки занятий и администрирование</small>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div sec:authorize="isAuthenticated()" class="text-end">
+                    <span class="text-muted d-block small">Вы вошли как</span>
+                    <span class="fw-semibold text-dark"><i class="bi bi-person-circle me-1 text-primary"></i> <span sec:authentication="name"></span></span>
+                    <a href="/logout" class="btn btn-sm btn-link text-danger p-0 ms-2 text-decoration-none">Выйти</a>
+                </div>
+                <div sec:authorize="isAnonymous()">
+                    <a href="/login" class="btn btn-primary btn-action"><i class="bi bi-box-arrow-in-right"></i> Войти в систему</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-custom p-4 mb-4" sec:authorize="hasRole('ADMIN')">
+            <h5 class="fw-bold mb-3"><i class="bi bi-plus-circle text-success me-2"></i>Добавить новую группу</h5>
+            <form method="post" action="/groups" id="createGroupForm">
+                <div class="input-group">
+                    <input type="text" name="name" class="form-control form-control-lg bg-light border-0"
+                           placeholder="Введите название группы (например: IT-СИП-22-Java)" required style="font-size: 0.95rem;">
+                    <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-lg me-1"></i>Создать</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card card-custom p-4">
+            <div class="mb-3 style='max-width: 350px;'">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-filter"></i></span>
+                    <input type="text" id="tableSearch" class="form-control border-start-0 ps-0" placeholder="Быстрый фильтр по названию...">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-custom align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th style="width: 70%;">Название группы</th>
+                        <th style="width: 30%; text-align: right;">Доступные действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="g : ${groups}">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-light text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-collection"></i>
+                                </div>
+                                <span class="fw-semibold text-dark" th:text="${g.name}"></span>
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <a th:href="@{/schedule/group/{id}(id=${g.id})}" class="btn btn-light text-info btn-action">
+                                <i class="bi bi-list-task"></i> Список
+                            </a>
+                            <a th:href="@{/schedule/group/{id}/week(id=${g.id})}" class="btn btn-primary btn-action ms-2">
+                                <i class="bi bi-calendar3"></i> Календарь
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(groups)}">
+                        <td colspan="2" class="text-center text-muted py-4">
+                            <i class="bi bi-folder-x fs-2 d-block mb-2 text-secondary"></i> Список групп пуст
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="mb-3">
-    <a href="/schedule/teachers" class="btn btn-outline-primary">Расписание преподавателей</a>
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('tableSearch').addEventListener('keyup', function() {
+            const value = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.table-custom tbody tr');
 
-<form method="post" action="/groups" class="mb-4" sec:authorize="hasRole('ADMIN')">
-    <div class="input-group">
-        <input type="text" name="name" class="form-control" placeholder="Название новой группы" required>
-        <button type="submit" class="btn btn-success">Добавить группу</button>
-    </div>
-</form>
-
-<table class="table table-striped">
-    <thead><tr><th>Название группы</th><th>Действие</th></tr></thead>
-    <tbody>
-    <tr th:each="g : ${groups}">
-        <td th:text="${g.name}"></td>
-        <td>
-            <a th:href="@{/schedule/group/{id}(id=${g.id})}" class="btn btn-sm btn-info">Список</a>
-            <a th:href="@{/schedule/group/{id}/week(id=${g.id})}" class="btn btn-sm btn-primary ms-1">Календарь</a>
-        </td>
-    </tr>
-    </tbody>
-</table>
-</body>
-</html>
+            rows.forEach(row => {
+                // Ищем текст внутри ячейки с названием группы (span с текстом)
+                const groupNameElement = row.querySelector('.fw-semibold');
+                if (groupNameElement) {
+                    const text = groupNameElement.textContent.toLowerCase();
+                    // Если строка содержит искомый текст — показываем её, иначе плавно скрываем
+                    if (text.includes(value)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        });
+    </script>
+    </body>
+    </html>
